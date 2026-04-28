@@ -6,263 +6,262 @@ This repository is used to reproduce and manage experiments for **FAP: Few-Shot 
 
 The primary goal is **reliable reproduction**. Do not optimize, refactor, redesign, or extend the method unless explicitly requested.
 
-The repository is maintained as the user's fork:
+This repository follows a Dassl/CoOp-style experiment pipeline. The main entry point is `train.py`, and the FAP trainer is implemented in `trainers/fap.py`.
+
+## Repository Information
 
 - User fork: `https://github.com/Rhett-Lin/FAP`
 - Original upstream: `https://github.com/lionel-w2/FAP`
+- Local project path: `/work1/zixuan/projects/FAP`
 
-This project is based on the Dassl framework and follows the CoOp / CoCoOp / MaPLe-style experiment pipeline.
-
----
+Do not store server credentials, passwords, private keys, tokens, or personal account information in this repository.
 
 ## Server Rules
 
-This repository is used on a shared RIKEN server. All actions must follow the server usage rules.
+This repository is used on a shared RIKEN server.
 
 Strict rules:
 
 - Do not create projects under `/home/zixuan/`.
-- Do not store datasets under `/home/zixuan/`.
-- Do not store checkpoints under `/home/zixuan/`.
-- Do not store logs under `/home/zixuan/`.
-- Do not store experiment outputs under `/home/zixuan/`.
-- The project path must be:
+- Do not store datasets, checkpoints, logs, outputs, caches, or experiment results under `/home/zixuan/`.
+- All project files must stay under `/work1/zixuan/projects/FAP`.
+- All datasets must stay under `/work1/zixuan/data/fap`.
+- All experiment outputs must stay under `/work1/zixuan/outputs/FAP`.
+- All Python environments must stay under `/work1/zixuan/envs`.
+- Do not use Anaconda or conda.
+- Use Python `venv` and `pip` only.
+- Do not install Python packages globally.
+- Do not create external tunneling, port forwarding, P2P, remote mapping, or unauthorized network processes.
+- Do not write scripts that expose account information.
+- Do not commit datasets, checkpoints, logs, caches, or generated experiment results.
+
+## Required Local Paths
+
+Use the following fixed paths:
 
 ```bash
-/work1/zixuan/projects/FAP
-````
+PROJECT_DIR=/work1/zixuan/projects/FAP
+ENV_DIR=/work1/zixuan/envs/fap
+DATA_DIR=/work1/zixuan/data/fap
+OUTPUT_DIR=/work1/zixuan/outputs/FAP
+CACHE_DIR=/work1/zixuan/cache
+PIP_CACHE_DIR=/work1/zixuan/cache/pip
+TORCH_HOME=/work1/zixuan/cache/torch
+XDG_CACHE_HOME=/work1/zixuan/cache
+```
 
-* The Python virtual environment path must be:
+Before running setup, installation, or experiments, make sure the required directories exist:
+
+```bash
+mkdir -p /work1/zixuan/envs
+mkdir -p /work1/zixuan/projects
+mkdir -p /work1/zixuan/data/fap
+mkdir -p /work1/zixuan/outputs/FAP
+mkdir -p /work1/zixuan/cache/pip
+mkdir -p /work1/zixuan/cache/torch
+mkdir -p /work1/zixuan/cache/clip
+```
+
+## Python Environment
+
+The Python virtual environment for this repository must be:
 
 ```bash
 /work1/zixuan/envs/fap
 ```
 
-* The dataset root must be:
-
-```bash
-/work1/zixuan/data/fap
-```
-
-* The output root must be:
-
-```bash
-/work1/zixuan/outputs/FAP
-```
-
-* Do not use Anaconda.
-* Do not use conda.
-* Use Python `venv` and `pip` only.
-* Do not install packages globally.
-* Do not modify system-level Python packages.
-* Do not create external tunneling processes.
-* Do not create port forwarding processes.
-* Do not create P2P transfer processes.
-* Do not create unauthorized remote mapping or external network exposure processes.
-* Do not store server credentials, passwords, private keys, tokens, or personal account information in this repository.
-* Do not write scripts that expose account information.
-* Do not commit datasets, checkpoints, logs, generated outputs, or private configuration files.
-
----
-
-## Directory Layout
-
-Expected server-side directory layout:
-
-```bash
-/work1/zixuan/
-├── envs/
-│   └── fap/
-├── projects/
-│   └── FAP/
-├── data/
-│   └── fap/
-└── outputs/
-    └── FAP/
-```
-
-The repository should be located at:
-
-```bash
-/work1/zixuan/projects/FAP
-```
-
-The Python environment should be activated by:
+Before running any Python, pip, or training command, activate the environment:
 
 ```bash
 source /work1/zixuan/envs/fap/bin/activate
 ```
 
-Before running any command, verify the working directory and Python environment:
+After activation, verify:
 
 ```bash
-pwd
 which python
 which pip
 python --version
 ```
 
----
-
-## Reproduction Priority
-
-Follow this order strictly:
-
-1. Inspect the repository structure.
-2. Verify the Python environment.
-3. Verify lightweight imports.
-4. Verify that `python train.py --help` works.
-5. Prepare or validate the dataset path.
-6. Create server-specific run scripts if necessary.
-7. Run the smallest few-shot experiment first.
-8. Debug errors with minimal changes.
-9. Only after the smallest experiment works, extend to more seeds.
-10. Only after seed reproduction works, extend to more shots.
-11. Only after few-shot reproduction works, consider base-to-new experiments.
-12. Only after base-to-new is understood, consider cross-dataset experiments.
-
-Do not launch large-scale experiments before the minimal few-shot run succeeds.
-
----
-
-## Minimal Target Experiment
-
-The first target experiment should be:
+Expected paths:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
+/work1/zixuan/envs/fap/bin/python
+/work1/zixuan/envs/fap/bin/pip
 ```
 
-This corresponds to:
+If `which python` or `which pip` points outside `/work1/zixuan/envs/fap`, stop and fix the environment before continuing.
 
-* Dataset: `caltech101`
-* Shots: `16`
-* Seed: `0`
+## Environment Creation Policy
 
-Do not run base-to-new or cross-dataset experiments before this minimal experiment succeeds.
+If `/work1/zixuan/envs/fap/bin/python` does not exist, create the environment with Python `venv`.
 
----
+Prefer Python 3.8 or Python 3.9 for compatibility with the older PyTorch dependency used by this project.
 
-## Coding Rules
-
-General coding rules:
-
-* Prefer minimal changes.
-* Do not change the core FAP method unless explicitly requested.
-* Do not change model architecture unless explicitly requested.
-* Do not change loss functions unless explicitly requested.
-* Do not change adversarial training logic unless explicitly requested.
-* Do not change evaluation logic unless explicitly requested.
-* Do not refactor unrelated code.
-* Do not rename public functions or classes unless necessary.
-* Do not silently remove existing functionality.
-* Do not silently overwrite previous results.
-* Do not hard-code credentials or private information.
-* Do not add unnecessary dependencies.
-* Preserve original experiment logic.
-
-Treat the following files as sensitive:
-
-* trainer implementations
-* model definitions
-* loss functions
-* adversarial training logic
-* dataset loaders
-* evaluation code
-* config files defining the experimental protocol
-
-Only modify these files if the error cannot be solved by environment, dependency, path, or script-level fixes.
-
-When path changes are needed:
-
-* Do not directly modify the original script unless explicitly requested.
-* Copy the original script and create a user-specific version.
-* For example:
+Recommended setup:
 
 ```bash
-cp scripts/Adv/fap/few_shot.sh scripts/Adv/fap/few_shot_zixuan.sh
-```
-
-Expected path variables in server-specific scripts:
-
-```bash
-DATA=/work1/zixuan/data/fap
-OUTPUT_DIR=/work1/zixuan/outputs/FAP
-```
-
-Server-specific scripts are for local reproduction only. They should not change the experimental protocol.
-
-Keep original scripts as references.
-
----
-
-## Environment Rules
-
-Use only the virtual environment located at:
-
-```bash
-/work1/zixuan/envs/fap
-```
-
-Activate it with:
-
-```bash
+cd /work1/zixuan/envs
+python3.8 -m venv fap
 source /work1/zixuan/envs/fap/bin/activate
+python -m pip install --upgrade pip setuptools wheel
 ```
+
+If `python3.8` is unavailable, check available Python versions:
+
+```bash
+which python3.8
+which python3.9
+which python3.10
+python3 --version
+```
+
+If Python 3.8 is unavailable, Python 3.9 is the next preferred option:
+
+```bash
+cd /work1/zixuan/envs
+python3.9 -m venv fap
+source /work1/zixuan/envs/fap/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+```
+
+Do not use conda or Anaconda.
+
+Do not silently switch to a system Python environment.
+
+## Cache Paths
+
+To avoid writing large cache files under `/home/zixuan/`, use the following server-safe cache paths:
+
+```bash
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+```
+
+If these variables are missing, set them before installing packages, importing CLIP, downloading model weights, or running training.
+
+If appropriate, append them to the virtual environment activation script:
+
+```bash
+cat >> /work1/zixuan/envs/fap/bin/activate << 'EOF'
+
+# FAP server-safe cache paths
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+EOF
+```
+
+After activation, verify:
+
+```bash
+echo $PIP_CACHE_DIR
+echo $TORCH_HOME
+echo $XDG_CACHE_HOME
+```
+
+Expected values:
+
+```bash
+/work1/zixuan/cache/pip
+/work1/zixuan/cache/torch
+/work1/zixuan/cache
+```
+
+## Dependency Policy
+
+Install packages only inside the activated virtual environment.
 
 Before installing packages, always check:
 
 ```bash
 which python
 which pip
+```
+
+Expected:
+
+```bash
+/work1/zixuan/envs/fap/bin/python
+/work1/zixuan/envs/fap/bin/pip
+```
+
+Do not use system-wide pip.
+
+Do not install packages globally.
+
+Do not use conda or Anaconda.
+
+Do not blindly install the original `requirements.txt` if it contains invalid, duplicated, or conflicting entries.
+
+If dependency conflicts occur, explain the conflict and propose the smallest compatible fix.
+
+Prefer minimal dependency changes that preserve the original FAP reproduction setting.
+
+## Suggested Dependency Setup
+
+First inspect CUDA:
+
+```bash
+nvidia-smi
+nvcc --version
+```
+
+Candidate PyTorch installation command:
+
+```bash
+pip install torch==1.10.1+cu113 torchvision==0.11.2+cu113 \
+  -f https://download.pytorch.org/whl/cu113/torch_stable.html
+```
+
+If this fails, do not randomly upgrade PyTorch. First inspect:
+
+```bash
 python --version
+nvidia-smi
+pip --version
 ```
 
-Do not use:
+Then propose a minimal compatible alternative.
+
+Dassl should be installed from a local clone under `/work1/zixuan/projects`:
 
 ```bash
-conda
-anaconda
+cd /work1/zixuan/projects
+git clone https://github.com/KaiyangZhou/Dassl.pytorch.git
+
+cd /work1/zixuan/projects/Dassl.pytorch
+pip install -r requirements.txt
+python setup.py develop
 ```
 
-Do not install Python packages globally.
+FAP dependencies should be installed inside the FAP repository.
 
-If dependency versions conflict:
+If needed, create a cleaned dependency file such as `requirements_clean.txt` rather than blindly installing the original `requirements.txt`.
 
-1. Report the conflict.
-2. Identify the exact failing package.
-3. Propose the smallest compatible change.
-4. Do not upgrade major dependencies unless required.
-5. Avoid changing PyTorch version unless necessary.
-6. Prefer compatibility with the original repository.
+## Lightweight Environment Verification
 
----
-
-## Lightweight Verification Commands
-
-Use these commands before running training:
+Before running training, run only lightweight checks:
 
 ```bash
+cd /work1/zixuan/projects/FAP
+source /work1/zixuan/envs/fap/bin/activate
+
 pwd
 git status
 which python
 which pip
 python --version
+echo $PIP_CACHE_DIR
+echo $TORCH_HOME
+echo $XDG_CACHE_HOME
 nvidia-smi
+python train.py --help
 ```
 
-Verify PyTorch:
-
-```bash
-python - << 'PY'
-import torch
-print("torch:", torch.__version__)
-print("cuda available:", torch.cuda.is_available())
-print("cuda device count:", torch.cuda.device_count())
-PY
-```
-
-Verify key imports:
+Then verify imports:
 
 ```bash
 python - << 'PY'
@@ -276,102 +275,14 @@ import scipy
 print("torch:", torch.__version__)
 print("torchvision:", torchvision.__version__)
 print("cuda available:", torch.cuda.is_available())
+print("cuda version:", torch.version.cuda)
 print("numpy:", numpy.__version__)
 print("scipy:", scipy.__version__)
 print("imports passed")
 PY
 ```
 
-Verify the training entry:
-
-```bash
-python train.py --help
-```
-
-These checks are lightweight and should be performed before launching long experiments.
-
----
-
-## Experiment Rules
-
-Before launching any training job:
-
-1. Check GPU usage:
-
-```bash
-nvidia-smi
-```
-
-2. Select GPU explicitly by prefixing the training command:
-
-```bash
-CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
-```
-
-Alternatively:
-
-```bash
-export CUDA_VISIBLE_DEVICES=0
-bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
-```
-
-3. Confirm the dataset path exists:
-
-```bash
-ls /work1/zixuan/data/fap
-```
-
-4. Confirm the output path exists:
-
-```bash
-mkdir -p /work1/zixuan/outputs/FAP
-```
-
-5. Use `tmux` for long-running experiments.
-
-Recommended tmux usage:
-
-```bash
-tmux new -s fap
-```
-
-Detach from tmux:
-
-```text
-Ctrl + B
-D
-```
-
-Reattach:
-
-```bash
-tmux attach -t fap
-```
-
-List sessions:
-
-```bash
-tmux ls
-```
-
-Experiment outputs must be saved under:
-
-```bash
-/work1/zixuan/outputs/FAP
-```
-
-Keep logs and checkpoints organized by:
-
-* trainer
-* dataset
-* shots
-* seed
-* configuration
-* timestamp if necessary
-
-Do not overwrite existing results unless explicitly requested.
-
----
+Do not run training until these checks pass.
 
 ## Dataset Rules
 
@@ -381,115 +292,135 @@ The dataset root must be:
 /work1/zixuan/data/fap
 ```
 
-Do not place datasets under:
+For the first reproduction run, the expected Caltech101 dataset structure is:
 
 ```bash
+/work1/zixuan/data/fap/caltech-101/101_ObjectCategories
+/work1/zixuan/data/fap/caltech-101/split_zhou_Caltech101.json
+```
+
+Do not place datasets under `/home/zixuan/`.
+
+Do not commit datasets to Git.
+
+Do not use P2P download tools.
+
+If data is missing, report exactly which path is missing.
+
+## Output Rules
+
+The output root must be:
+
+```bash
+/work1/zixuan/outputs/FAP
+```
+
+Do not write outputs to:
+
+```bash
+/output_dir
 /home/zixuan
 ```
 
-For the first target dataset, the expected Caltech101 structure is usually:
+Do not overwrite existing results unless explicitly requested.
+
+Keep logs and checkpoints organized by dataset, shots, seed, and trainer.
+
+## Reproduction Priority
+
+Follow this order:
+
+1. Verify repository location.
+2. Verify Python virtual environment.
+3. Verify cache paths.
+4. Verify dependencies.
+5. Verify `python train.py --help`.
+6. Verify dataset path.
+7. Create or verify server-specific few-shot script.
+8. Run the smallest few-shot experiment.
+9. Debug errors with minimal changes.
+10. Extend to more seeds only after the first run succeeds.
+11. Extend to more shots only after seed runs succeed.
+12. Extend to more datasets only after the minimal dataset succeeds.
+13. Consider base-to-new or cross-dataset experiments only after few-shot reproduction works.
+
+## Minimal Target Experiment
+
+The first target experiment is:
 
 ```bash
-/work1/zixuan/data/fap/caltech-101/
-├── 101_ObjectCategories/
-└── split_zhou_Caltech101.json
+CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
 ```
 
-The script argument is `caltech101`, while the actual dataset folder may be `caltech-101`.
+Do not launch large-scale experiments before this minimal run succeeds.
 
-Before running the minimal experiment, check:
+Do not run base-to-new or cross-dataset experiments before the minimal few-shot experiment succeeds.
+
+## Script Modification Rules
+
+If script paths are wrong, do not modify the original script directly.
+
+Instead:
+
+1. Copy the original script.
+2. Rename it with `_zixuan`.
+3. Modify only server-specific paths.
+4. Preserve the original experiment logic.
+
+For few-shot reproduction:
 
 ```bash
-ls /work1/zixuan/data/fap/caltech-101
-ls /work1/zixuan/data/fap/caltech-101/101_ObjectCategories
-ls /work1/zixuan/data/fap/caltech-101/split_zhou_Caltech101.json
+cp scripts/Adv/fap/few_shot.sh scripts/Adv/fap/few_shot_zixuan.sh
 ```
 
-If the dataset is missing:
-
-* Do not guess paths.
-* Report the missing path.
-* Explain what files or folders are expected.
-* Do not download large datasets without explicit user approval.
-* If a dataset is missing, report the expected dataset name, folder structure, and source instruction, but do not start downloading it automatically.
-* Do not use P2P tools.
-* Use only normal and allowed download methods.
-
----
-
-## Script Rules
-
-Original scripts should be preserved.
-
-For server-specific experiments, create copies such as:
-
-```bash
-scripts/Adv/fap/few_shot_zixuan.sh
-```
-
-Do not modify:
-
-```bash
-scripts/Adv/fap/few_shot.sh
-```
-
-unless explicitly requested.
-
-For `few_shot_zixuan.sh`, expected path settings are:
+Expected path settings inside `few_shot_zixuan.sh`:
 
 ```bash
 DATA=/work1/zixuan/data/fap
 OUTPUT_DIR=/work1/zixuan/outputs/FAP
 ```
 
-After creating or modifying a script, show the diff:
+Do not change trainer logic, model logic, loss functions, adversarial attack logic, or evaluation logic unless explicitly requested.
+
+## Coding Rules
+
+- Prefer minimal changes.
+- Do not change the core FAP method unless explicitly requested.
+- Do not change model logic, loss functions, adversarial training logic, or evaluation logic unless necessary for reproduction.
+- Preserve original scripts as references.
+- Make path changes explicit and easy to review.
+- Avoid hard-coded credentials or private information.
+- Do not silently overwrite previous results.
+- If code must be changed, explain why the change is necessary for reproduction.
+
+## Experiment Rules
+
+Before launching any experiment:
 
 ```bash
-git diff scripts/Adv/fap/few_shot_zixuan.sh
+nvidia-smi
 ```
 
----
+Use `CUDA_VISIBLE_DEVICES` to select a GPU.
 
-## Debugging Rules
+Use `tmux` for long-running experiments.
 
-When an error occurs:
+Do not run multiple large jobs without checking GPU usage.
 
-1. Read the full traceback.
+Do not launch long-running jobs unless explicitly requested.
 
-2. Identify the smallest failing component.
+For long experiments, use a command pattern like:
 
-3. Distinguish between:
-
-   * environment error
-   * dependency error
-   * path error
-   * dataset error
-   * config error
-   * code logic error
-
-4. Prefer dependency and path fixes before code logic changes.
-
-5. Do not refactor unrelated code.
-
-6. Do not change model logic just to bypass an error.
-
-7. If a code change is necessary, explain why.
-
-8. Re-run the smallest relevant command to verify the fix.
-
-When reporting an error, include:
-
-* the command that failed
-* the key traceback line
-* the suspected cause
-* the minimal proposed fix
-* whether the fix was tested
-
----
+```bash
+tmux new -s fap
+cd /work1/zixuan/projects/FAP
+source /work1/zixuan/envs/fap/bin/activate
+CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
+```
 
 ## Git Rules
 
-Work on a reproduction branch, not directly on `main`.
+Work on a reproduction branch, not directly on `main`, unless explicitly requested.
 
 Recommended branch:
 
@@ -497,200 +428,42 @@ Recommended branch:
 reproduce/fap-server-setup
 ```
 
-Before making changes:
+Before modifying files:
 
 ```bash
 git status
 ```
 
-After making changes:
-
-```bash
-git diff
-```
+After meaningful changes, summarize the changed files.
 
 Do not commit:
 
-* datasets
-* checkpoints
-* logs
-* generated outputs
-* virtual environments
-* credentials
-* private keys
-* tokens
-* temporary files
+- datasets
+- checkpoints
+- logs
+- outputs
+- caches
+- virtual environments
+- private credentials
+- server account information
 
-Recommended commit style:
+Keep `.gitignore` updated for outputs, datasets, caches, and local environments.
 
-```bash
-git add <changed-files>
-git commit -m "Add server-specific FAP reproduction setup"
-```
-
-Before pushing:
-
-```bash
-git status
-git log --oneline -5
-```
-
----
-
-## Reproduction Log Rules
-
-Maintain reproduction notes in:
-
-```bash
-REPRODUCTION.md
-```
-
-When a meaningful step is completed, update the reproduction log with:
-
-* date
-* command
-* environment
-* result
-* error if any
-* next step
-
-Do not exaggerate results.
-
-Do not report an experiment as successfully reproduced unless the command actually finished and produced the expected output.
-
----
-
-## Dependency Rules
-
-Do not blindly install the original `requirements.txt` if it contains conflicting, duplicate, or invalid entries.
-
-Before installing, inspect dependency files.
-
-If creating a cleaned dependency file, name it clearly, for example:
-
-```bash
-requirements_clean.txt
-```
-
-Do not remove the original `requirements.txt`.
-
-If a dependency issue occurs, first report:
-
-* Python version
-* PyTorch version
-* CUDA availability
-* failing package
-* exact error message
-
-Do not upgrade to the latest version of every package unless necessary.
-
----
-
-## Codex Behavior Rules
-
-When working as an agent:
-
-* First inspect, then plan, then modify.
-* Do not modify files during the initial inspection step.
-* Do not run long training jobs without explicit instruction.
-* Do not run multiple experiments at once.
-* Do not create files outside the allowed project, environment, data, or output directories.
-* Do not create files under `/home/zixuan/`.
-* Do not store credentials.
-* Do not use external tunneling or P2P tools.
-* Do not make large code changes unless requested.
-* Always summarize what was changed and why.
-* Always state whether verification was completed or not.
-
----
-
-## First Inspection Task
-
-For the first Codex run, do not modify files.
-
-The first task should inspect:
-
-1. Repository structure.
-2. Main training entry point.
-3. Trainer implementation related to FAP.
-4. Config files used by the few-shot script.
-5. Scripts under `scripts/Adv/fap/`.
-6. Expected dataset root.
-7. Expected output root.
-8. Path assumptions that must be changed for this server.
-9. Minimal environment verification commands.
-10. Minimal first reproduction command.
-
-The first Codex run should only produce a reproduction plan.
-
----
-
-## Expected First Reproduction Command
-
-After environment, dataset, and script paths are verified, run:
-
-```bash
-CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
-```
-
-Before running, confirm:
-
-```bash
-pwd
-git status
-which python
-which pip
-python --version
-nvidia-smi
-ls /work1/zixuan/data/fap
-ls /work1/zixuan/outputs/FAP
-```
-
----
-
-## Final Report Format
+## Reporting Rules
 
 At the end of each task, report:
 
-### Summary
+1. What was inspected.
+2. What files were changed.
+3. Why each change was necessary.
+4. What commands were run.
+5. Whether each command succeeded or failed.
+6. Key error messages if any command failed.
+7. Whether the repository is ready for the next reproduction step.
+8. The next recommended action.
 
-Briefly state what was done.
+If a command fails, include the key error message and propose the smallest fix.
 
-### Files Inspected
+Do not hide failed commands.
 
-List the important files inspected.
-
-### Files Changed
-
-List changed files. If no files were changed, say so.
-
-### Commands Run
-
-List commands that were executed.
-
-### Results
-
-State whether each command succeeded or failed.
-
-### Key Error
-
-If there was an error, include the key error message.
-
-### Next Step
-
-Suggest the next minimal step.
-
----
-
-## Important Reminder
-
-The goal is to reproduce the original FAP results in a controlled and traceable way.
-
-Do not prioritize speed over correctness.
-
-Do not make unnecessary changes.
-
-Do not violate server usage rules.
-
-Always keep the repository clean, reproducible, and easy to review.
-
+Do not claim success unless the relevant verification command passed.

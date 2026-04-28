@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+
+# Environments
+.env/
+.venv/
+venv/
+env/
+/envs/
+
+# Local server paths
+data/
+datasets/
+output/
+outputs/
+logs/
+checkpoints/
+results/
+
+# Experiment artifacts
+*.pth
+*.pt
+*.ckpt
+*.pkl
+*.npy
+*.npz
+*.mat
+*.h5
+*.hdf5
+*.log
+
+# System
+.DS_Store
+.idea/
+.vscode/
+
+# Do not store credentials
+*.pem
+*.key
+*.pub
+*.token
+*.secret
+credentials*
+password*
