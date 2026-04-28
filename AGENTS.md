@@ -28,12 +28,15 @@ Strict rules:
 - All datasets must stay under `/work1/zixuan/data/fap`.
 - All experiment outputs must stay under `/work1/zixuan/outputs/FAP`.
 - All Python environments must stay under `/work1/zixuan/envs`.
-- Do not use Anaconda or conda.
-- Use Python `venv` and `pip` only.
+- Miniconda is allowed only because explicit permission has been obtained.
+- Install Miniconda only under `/work1/zixuan/envs/miniconda3`.
+- Do not install Miniconda, conda environments, conda packages, pip packages, datasets, checkpoints, or caches under `/home/zixuan/`.
+- Do not use full Anaconda distribution unless explicitly permitted.
 - Do not install Python packages globally.
+- Do not use system-wide pip.
 - Do not create external tunneling, port forwarding, P2P, remote mapping, or unauthorized network processes.
 - Do not write scripts that expose account information.
-- Do not commit datasets, checkpoints, logs, caches, or generated experiment results.
+- Do not commit datasets, checkpoints, logs, caches, virtual environments, or generated experiment results.
 
 ## Required Local Paths
 
@@ -41,10 +44,12 @@ Use the following fixed paths:
 
 ```bash
 PROJECT_DIR=/work1/zixuan/projects/FAP
-ENV_DIR=/work1/zixuan/envs/fap
+MINICONDA_DIR=/work1/zixuan/envs/miniconda3
+CONDA_ENV_DIR=/work1/zixuan/envs/conda_envs/fap
 DATA_DIR=/work1/zixuan/data/fap
 OUTPUT_DIR=/work1/zixuan/outputs/FAP
 CACHE_DIR=/work1/zixuan/cache
+CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
 PIP_CACHE_DIR=/work1/zixuan/cache/pip
 TORCH_HOME=/work1/zixuan/cache/torch
 XDG_CACHE_HOME=/work1/zixuan/cache
@@ -54,26 +59,105 @@ Before running setup, installation, or experiments, make sure the required direc
 
 ```bash
 mkdir -p /work1/zixuan/envs
+mkdir -p /work1/zixuan/envs/tools
+mkdir -p /work1/zixuan/envs/conda_envs
 mkdir -p /work1/zixuan/projects
 mkdir -p /work1/zixuan/data/fap
 mkdir -p /work1/zixuan/outputs/FAP
+mkdir -p /work1/zixuan/cache/conda_pkgs
 mkdir -p /work1/zixuan/cache/pip
 mkdir -p /work1/zixuan/cache/torch
 mkdir -p /work1/zixuan/cache/clip
 ```
 
-## Python Environment
+## Miniconda Policy
 
-The Python virtual environment for this repository must be:
+Miniconda may be used only under the following constraints:
+
+- Miniconda must be installed to `/work1/zixuan/envs/miniconda3`.
+- The FAP environment must be created at `/work1/zixuan/envs/conda_envs/fap`.
+- Conda package cache must be stored under `/work1/zixuan/cache/conda_pkgs`.
+- Pip cache must be stored under `/work1/zixuan/cache/pip`.
+- Torch and CLIP caches must be stored under `/work1/zixuan/cache`.
+- Do not run `conda init` unless explicitly requested.
+- Do not modify `/home/zixuan/.bashrc` automatically.
+- Do not activate or use the base environment for project work.
+- Do not install packages into the base environment except when strictly required for conda itself.
+- Do not use system Python or system pip for this repository.
+- Do not use sudo or apt for environment setup.
+
+## Miniconda Installation
+
+If Miniconda is not installed, install it under `/work1/zixuan/envs/miniconda3`.
+
+Recommended commands:
 
 ```bash
-/work1/zixuan/envs/fap
+mkdir -p /work1/zixuan/envs/tools
+cd /work1/zixuan/envs/tools
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+
+bash /work1/zixuan/envs/tools/miniconda.sh -b -p /work1/zixuan/envs/miniconda3
 ```
 
-Before running any Python, pip, or training command, activate the environment:
+If `wget` is unavailable, use:
 
 ```bash
-source /work1/zixuan/envs/fap/bin/activate
+curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /work1/zixuan/envs/tools/miniconda.sh
+
+bash /work1/zixuan/envs/tools/miniconda.sh -b -p /work1/zixuan/envs/miniconda3
+```
+
+Do not install Miniconda under `/home/zixuan/`.
+
+Do not run:
+
+```bash
+conda init
+```
+
+Instead, activate conda manually with:
+
+```bash
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+```
+
+## Conda Environment Creation
+
+Before creating or using the FAP environment, set safe cache paths:
+
+```bash
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+```
+
+Create the FAP environment with Python 3.8:
+
+```bash
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda create -y -p /work1/zixuan/envs/conda_envs/fap python=3.8 pip
+```
+
+Activate the environment:
+
+```bash
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
 ```
 
 After activation, verify:
@@ -82,59 +166,25 @@ After activation, verify:
 which python
 which pip
 python --version
+pip --version
+conda info --envs
 ```
 
 Expected paths:
 
 ```bash
-/work1/zixuan/envs/fap/bin/python
-/work1/zixuan/envs/fap/bin/pip
+/work1/zixuan/envs/conda_envs/fap/bin/python
+/work1/zixuan/envs/conda_envs/fap/bin/pip
 ```
 
-If `which python` or `which pip` points outside `/work1/zixuan/envs/fap`, stop and fix the environment before continuing.
-
-## Environment Creation Policy
-
-If `/work1/zixuan/envs/fap/bin/python` does not exist, create the environment with Python `venv`.
-
-Prefer Python 3.8 or Python 3.9 for compatibility with the older PyTorch dependency used by this project.
-
-Recommended setup:
-
-```bash
-cd /work1/zixuan/envs
-python3.8 -m venv fap
-source /work1/zixuan/envs/fap/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-```
-
-If `python3.8` is unavailable, check available Python versions:
-
-```bash
-which python3.8
-which python3.9
-which python3.10
-python3 --version
-```
-
-If Python 3.8 is unavailable, Python 3.9 is the next preferred option:
-
-```bash
-cd /work1/zixuan/envs
-python3.9 -m venv fap
-source /work1/zixuan/envs/fap/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-```
-
-Do not use conda or Anaconda.
-
-Do not silently switch to a system Python environment.
+If `which python` or `which pip` points outside `/work1/zixuan/envs/conda_envs/fap`, stop and fix the environment before continuing.
 
 ## Cache Paths
 
-To avoid writing large cache files under `/home/zixuan/`, use the following server-safe cache paths:
+Always use server-safe cache paths:
 
 ```bash
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
 export PIP_CACHE_DIR=/work1/zixuan/cache/pip
 export TORCH_HOME=/work1/zixuan/cache/torch
 export XDG_CACHE_HOME=/work1/zixuan/cache
@@ -142,21 +192,10 @@ export XDG_CACHE_HOME=/work1/zixuan/cache
 
 If these variables are missing, set them before installing packages, importing CLIP, downloading model weights, or running training.
 
-If appropriate, append them to the virtual environment activation script:
-
-```bash
-cat >> /work1/zixuan/envs/fap/bin/activate << 'EOF'
-
-# FAP server-safe cache paths
-export PIP_CACHE_DIR=/work1/zixuan/cache/pip
-export TORCH_HOME=/work1/zixuan/cache/torch
-export XDG_CACHE_HOME=/work1/zixuan/cache
-EOF
-```
-
 After activation, verify:
 
 ```bash
+echo $CONDA_PKGS_DIRS
 echo $PIP_CACHE_DIR
 echo $TORCH_HOME
 echo $XDG_CACHE_HOME
@@ -165,6 +204,7 @@ echo $XDG_CACHE_HOME
 Expected values:
 
 ```bash
+/work1/zixuan/cache/conda_pkgs
 /work1/zixuan/cache/pip
 /work1/zixuan/cache/torch
 /work1/zixuan/cache
@@ -172,27 +212,43 @@ Expected values:
 
 ## Dependency Policy
 
-Install packages only inside the activated virtual environment.
+Install packages only inside the activated FAP conda environment.
 
 Before installing packages, always check:
 
 ```bash
 which python
 which pip
+python --version
+pip --version
 ```
 
 Expected:
 
 ```bash
-/work1/zixuan/envs/fap/bin/python
-/work1/zixuan/envs/fap/bin/pip
+/work1/zixuan/envs/conda_envs/fap/bin/python
+/work1/zixuan/envs/conda_envs/fap/bin/pip
 ```
+
+Use:
+
+```bash
+python -m pip install ...
+```
+
+or:
+
+```bash
+pip install ...
+```
+
+only after confirming that pip belongs to the FAP environment.
 
 Do not use system-wide pip.
 
 Do not install packages globally.
 
-Do not use conda or Anaconda.
+Do not install packages into the conda base environment.
 
 Do not blindly install the original `requirements.txt` if it contains invalid, duplicated, or conflicting entries.
 
@@ -202,7 +258,7 @@ Prefer minimal dependency changes that preserve the original FAP reproduction se
 
 ## Suggested Dependency Setup
 
-First inspect CUDA:
+First inspect GPU and CUDA information:
 
 ```bash
 nvidia-smi
@@ -241,19 +297,55 @@ FAP dependencies should be installed inside the FAP repository.
 
 If needed, create a cleaned dependency file such as `requirements_clean.txt` rather than blindly installing the original `requirements.txt`.
 
+Example cleaned dependency file:
+
+```bash
+cd /work1/zixuan/projects/FAP
+
+cat > requirements_clean.txt << 'EOF'
+autoattack==0.1
+einops==0.8.0
+ftfy==6.3.0
+numpy==1.24.3
+Pillow==8.3.2
+regex==2023.10.3
+scipy==1.10.1
+setuptools==59.5.0
+tqdm==4.66.1
+yacs==0.1.8
+EOF
+```
+
+Install FAP dependencies:
+
+```bash
+pip install -r requirements_clean.txt
+pip install git+https://github.com/openai/CLIP.git
+```
+
 ## Lightweight Environment Verification
 
 Before running training, run only lightweight checks:
 
 ```bash
 cd /work1/zixuan/projects/FAP
-source /work1/zixuan/envs/fap/bin/activate
+
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
 
 pwd
 git status
 which python
 which pip
 python --version
+pip --version
+echo $CONDA_PKGS_DIRS
 echo $PIP_CACHE_DIR
 echo $TORCH_HOME
 echo $XDG_CACHE_HOME
@@ -331,18 +423,19 @@ Keep logs and checkpoints organized by dataset, shots, seed, and trainer.
 Follow this order:
 
 1. Verify repository location.
-2. Verify Python virtual environment.
-3. Verify cache paths.
-4. Verify dependencies.
-5. Verify `python train.py --help`.
-6. Verify dataset path.
-7. Create or verify server-specific few-shot script.
-8. Run the smallest few-shot experiment.
-9. Debug errors with minimal changes.
-10. Extend to more seeds only after the first run succeeds.
-11. Extend to more shots only after seed runs succeed.
-12. Extend to more datasets only after the minimal dataset succeeds.
-13. Consider base-to-new or cross-dataset experiments only after few-shot reproduction works.
+2. Verify Miniconda installation.
+3. Verify FAP conda environment.
+4. Verify cache paths.
+5. Verify dependencies.
+6. Verify `python train.py --help`.
+7. Verify dataset path.
+8. Create or verify server-specific few-shot script.
+9. Run the smallest few-shot experiment.
+10. Debug errors with minimal changes.
+11. Extend to more seeds only after the first run succeeds.
+12. Extend to more shots only after seed runs succeed.
+13. Extend to more datasets only after the minimal dataset succeeds.
+14. Consider base-to-new or cross-dataset experiments only after few-shot reproduction works.
 
 ## Minimal Target Experiment
 
@@ -414,7 +507,16 @@ For long experiments, use a command pattern like:
 ```bash
 tmux new -s fap
 cd /work1/zixuan/projects/FAP
-source /work1/zixuan/envs/fap/bin/activate
+
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
+
 CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
 ```
 
@@ -446,6 +548,8 @@ Do not commit:
 - virtual environments
 - private credentials
 - server account information
+- Miniconda installation files
+- conda environments
 
 Keep `.gitignore` updated for outputs, datasets, caches, and local environments.
 

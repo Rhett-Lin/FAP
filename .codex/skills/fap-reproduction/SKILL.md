@@ -13,7 +13,7 @@ The goal is to reproduce the original repository first, not to redesign the meth
 
 Use this skill for:
 
-- environment setup
+- Miniconda-based environment setup
 - dependency checks
 - server-specific path configuration
 - few-shot reproduction
@@ -30,16 +30,18 @@ Always use the following paths:
 
 ```bash
 PROJECT_DIR=/work1/zixuan/projects/FAP
-ENV_DIR=/work1/zixuan/envs/fap
+MINICONDA_DIR=/work1/zixuan/envs/miniconda3
+CONDA_ENV_DIR=/work1/zixuan/envs/conda_envs/fap
 DATA_DIR=/work1/zixuan/data/fap
 OUTPUT_DIR=/work1/zixuan/outputs/FAP
 CACHE_DIR=/work1/zixuan/cache
+CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
 PIP_CACHE_DIR=/work1/zixuan/cache/pip
 TORCH_HOME=/work1/zixuan/cache/torch
 XDG_CACHE_HOME=/work1/zixuan/cache
 ```
 
-Never create projects, datasets, outputs, logs, checkpoints, virtual environments, or caches under:
+Never create projects, datasets, outputs, logs, checkpoints, virtual environments, conda environments, or caches under:
 
 ```bash
 /home/zixuan/
@@ -52,16 +54,21 @@ Always follow these rules:
 - Do not create projects under `/home/zixuan/`.
 - Do not store datasets, checkpoints, logs, outputs, caches, or experiment results under `/home/zixuan/`.
 - Use `/work1/zixuan/projects/FAP` as the repository path.
-- Use `/work1/zixuan/envs/fap` as the Python environment path.
+- Use `/work1/zixuan/envs/miniconda3` as the Miniconda installation path.
+- Use `/work1/zixuan/envs/conda_envs/fap` as the FAP conda environment path.
 - Use `/work1/zixuan/data/fap` as the dataset root.
 - Use `/work1/zixuan/outputs/FAP` as the output root.
 - Use `/work1/zixuan/cache` for cache files.
-- Do not use Anaconda or conda.
+- Miniconda is allowed only because explicit permission has been obtained.
+- Do not install Miniconda under `/home/zixuan/`.
+- Do not create conda environments under `/home/zixuan/`.
+- Do not use full Anaconda distribution unless explicitly permitted.
 - Do not install Python packages globally.
-- Use Python `venv` and `pip` only.
+- Do not install project packages into the conda base environment.
+- Do not use system Python or system pip for this project.
 - Do not create external tunnels, port forwarding, P2P, remote mapping, or unauthorized network processes.
 - Do not store credentials, passwords, private keys, tokens, or private account information in files.
-- Do not commit datasets, checkpoints, logs, generated results, caches, or virtual environments.
+- Do not commit datasets, checkpoints, logs, generated results, caches, virtual environments, conda environments, or Miniconda installers.
 
 ## Directory Initialization
 
@@ -69,9 +76,12 @@ If required directories do not exist, create them with:
 
 ```bash
 mkdir -p /work1/zixuan/envs
+mkdir -p /work1/zixuan/envs/tools
+mkdir -p /work1/zixuan/envs/conda_envs
 mkdir -p /work1/zixuan/projects
 mkdir -p /work1/zixuan/data/fap
 mkdir -p /work1/zixuan/outputs/FAP
+mkdir -p /work1/zixuan/cache/conda_pkgs
 mkdir -p /work1/zixuan/cache/pip
 mkdir -p /work1/zixuan/cache/torch
 mkdir -p /work1/zixuan/cache/clip
@@ -79,53 +89,92 @@ mkdir -p /work1/zixuan/cache/clip
 
 Do not create equivalent directories under `/home/zixuan/`.
 
-## Environment Setup Workflow
+## Miniconda Installation Workflow
 
-Before installing dependencies or running experiments, check whether the virtual environment exists:
+Check whether Miniconda already exists:
 
 ```bash
-test -x /work1/zixuan/envs/fap/bin/python && echo "venv exists" || echo "venv missing"
+test -x /work1/zixuan/envs/miniconda3/bin/conda && echo "miniconda exists" || echo "miniconda missing"
 ```
 
-If the environment is missing, create it with Python `venv`.
+If Miniconda is missing, install it under `/work1/zixuan/envs/miniconda3`.
 
-Prefer Python 3.8:
+Download installer:
 
 ```bash
-cd /work1/zixuan/envs
-python3.8 -m venv fap
-source /work1/zixuan/envs/fap/bin/activate
-python -m pip install --upgrade pip setuptools wheel
+mkdir -p /work1/zixuan/envs/tools
+cd /work1/zixuan/envs/tools
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 ```
 
-If Python 3.8 is unavailable, check available versions:
+If `wget` is unavailable, use:
 
 ```bash
-which python3.8
-which python3.9
-which python3.10
-python3 --version
+curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /work1/zixuan/envs/tools/miniconda.sh
 ```
 
-If Python 3.8 is unavailable, try Python 3.9:
+Install Miniconda:
 
 ```bash
-cd /work1/zixuan/envs
-python3.9 -m venv fap
-source /work1/zixuan/envs/fap/bin/activate
-python -m pip install --upgrade pip setuptools wheel
+bash /work1/zixuan/envs/tools/miniconda.sh -b -p /work1/zixuan/envs/miniconda3
 ```
 
-Do not use conda or Anaconda.
+Do not install Miniconda under `/home/zixuan/`.
 
-Do not silently use system Python.
-
-## Environment Activation Rule
-
-Before running any Python, pip, setup, verification, or training command, activate the virtual environment:
+Do not run:
 
 ```bash
-source /work1/zixuan/envs/fap/bin/activate
+conda init
+```
+
+Instead, activate conda manually with:
+
+```bash
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+```
+
+## Conda Environment Setup Workflow
+
+Before creating or using the FAP environment, set server-safe cache paths:
+
+```bash
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+```
+
+Check whether the FAP conda environment exists:
+
+```bash
+test -x /work1/zixuan/envs/conda_envs/fap/bin/python && echo "fap conda env exists" || echo "fap conda env missing"
+```
+
+If the FAP conda environment is missing, create it with Python 3.8:
+
+```bash
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda create -y -p /work1/zixuan/envs/conda_envs/fap python=3.8 pip
+```
+
+Activate the environment:
+
+```bash
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
 ```
 
 Then verify:
@@ -134,22 +183,25 @@ Then verify:
 which python
 which pip
 python --version
+pip --version
+conda info --envs
 ```
 
 Expected:
 
 ```bash
-/work1/zixuan/envs/fap/bin/python
-/work1/zixuan/envs/fap/bin/pip
+/work1/zixuan/envs/conda_envs/fap/bin/python
+/work1/zixuan/envs/conda_envs/fap/bin/pip
 ```
 
-If `which python` or `which pip` points outside `/work1/zixuan/envs/fap`, stop and fix the environment before continuing.
+If `which python` or `which pip` points outside `/work1/zixuan/envs/conda_envs/fap`, stop and fix the environment before continuing.
 
 ## Cache Configuration
 
 Always use server-safe cache paths:
 
 ```bash
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
 export PIP_CACHE_DIR=/work1/zixuan/cache/pip
 export TORCH_HOME=/work1/zixuan/cache/torch
 export XDG_CACHE_HOME=/work1/zixuan/cache
@@ -158,28 +210,18 @@ export XDG_CACHE_HOME=/work1/zixuan/cache
 If the cache directories do not exist, create them:
 
 ```bash
+mkdir -p /work1/zixuan/cache/conda_pkgs
 mkdir -p /work1/zixuan/cache/pip
 mkdir -p /work1/zixuan/cache/torch
 mkdir -p /work1/zixuan/cache/clip
 ```
 
-Do not allow package caches, model weights, CLIP downloads, or Torch caches to be written under `/home/zixuan/`.
-
-If appropriate, append the cache configuration to the virtual environment activation script:
-
-```bash
-cat >> /work1/zixuan/envs/fap/bin/activate << 'EOF'
-
-# FAP server-safe cache paths
-export PIP_CACHE_DIR=/work1/zixuan/cache/pip
-export TORCH_HOME=/work1/zixuan/cache/torch
-export XDG_CACHE_HOME=/work1/zixuan/cache
-EOF
-```
+Do not allow package caches, model weights, CLIP downloads, Torch caches, or conda package caches to be written under `/home/zixuan/`.
 
 After activation, check:
 
 ```bash
+echo $CONDA_PKGS_DIRS
 echo $PIP_CACHE_DIR
 echo $TORCH_HOME
 echo $XDG_CACHE_HOME
@@ -188,6 +230,7 @@ echo $XDG_CACHE_HOME
 Expected:
 
 ```bash
+/work1/zixuan/cache/conda_pkgs
 /work1/zixuan/cache/pip
 /work1/zixuan/cache/torch
 /work1/zixuan/cache
@@ -199,13 +242,24 @@ Before running training, run only lightweight checks:
 
 ```bash
 cd /work1/zixuan/projects/FAP
-source /work1/zixuan/envs/fap/bin/activate
+
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
 
 pwd
 git status
 which python
 which pip
 python --version
+pip --version
+conda info --envs
+echo $CONDA_PKGS_DIRS
 echo $PIP_CACHE_DIR
 echo $TORCH_HOME
 echo $XDG_CACHE_HOME
@@ -238,20 +292,22 @@ Do not run training until these checks pass.
 
 ## Dependency Installation Policy
 
-Install packages only inside the activated virtual environment.
+Install packages only inside the activated FAP conda environment.
 
 Before installing packages, always run:
 
 ```bash
 which python
 which pip
+python --version
+pip --version
 ```
 
 Expected:
 
 ```bash
-/work1/zixuan/envs/fap/bin/python
-/work1/zixuan/envs/fap/bin/pip
+/work1/zixuan/envs/conda_envs/fap/bin/python
+/work1/zixuan/envs/conda_envs/fap/bin/pip
 ```
 
 Use:
@@ -269,12 +325,14 @@ pip install ...
 only after confirming that `which pip` points to:
 
 ```bash
-/work1/zixuan/envs/fap/bin/pip
+/work1/zixuan/envs/conda_envs/fap/bin/pip
 ```
 
 Do not install packages globally.
 
-Do not use conda or Anaconda.
+Do not install project packages into the conda base environment.
+
+Do not use system Python or system pip.
 
 Do not blindly install the original `requirements.txt` if it contains invalid, duplicated, or conflicting entries.
 
@@ -331,7 +389,7 @@ cd /work1/zixuan/projects
 git clone https://github.com/KaiyangZhou/Dassl.pytorch.git
 ```
 
-Install inside the activated venv:
+Install inside the activated FAP conda environment:
 
 ```bash
 cd /work1/zixuan/projects/Dassl.pytorch
@@ -397,14 +455,15 @@ Follow this sequence:
 4. Identify config files.
 5. Identify scripts under `scripts/Adv/fap/`.
 6. Verify repository path.
-7. Verify virtual environment path.
-8. Verify cache paths.
-9. Verify dependencies.
-10. Verify dataset paths.
-11. Create or verify server-specific few-shot script.
-12. Run minimal command.
-13. Debug errors with minimal changes.
-14. Summarize exact reproduction state.
+7. Verify Miniconda installation.
+8. Verify FAP conda environment.
+9. Verify cache paths.
+10. Verify dependencies.
+11. Verify dataset paths.
+12. Create or verify server-specific few-shot script.
+13. Run minimal command.
+14. Debug errors with minimal changes.
+15. Summarize exact reproduction state.
 
 Do not skip lightweight verification.
 
@@ -530,7 +589,16 @@ Before running it:
 
 ```bash
 cd /work1/zixuan/projects/FAP
-source /work1/zixuan/envs/fap/bin/activate
+
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
+
 nvidia-smi
 ```
 
@@ -567,7 +635,16 @@ Use `tmux` for long-running experiments:
 ```bash
 tmux new -s fap
 cd /work1/zixuan/projects/FAP
-source /work1/zixuan/envs/fap/bin/activate
+
+source /work1/zixuan/envs/miniconda3/etc/profile.d/conda.sh
+
+export CONDA_PKGS_DIRS=/work1/zixuan/cache/conda_pkgs
+export PIP_CACHE_DIR=/work1/zixuan/cache/pip
+export TORCH_HOME=/work1/zixuan/cache/torch
+export XDG_CACHE_HOME=/work1/zixuan/cache
+
+conda activate /work1/zixuan/envs/conda_envs/fap
+
 CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
 ```
 
@@ -595,7 +672,9 @@ Do not claim success unless the relevant verification command passed.
 
 Check these first when debugging:
 
-- wrong Python environment
+- wrong conda environment
+- base conda environment used accidentally
+- system Python used accidentally
 - system pip used accidentally
 - missing Dassl installation
 - missing CLIP installation
@@ -630,6 +709,8 @@ Do not commit:
 - output directories
 - caches
 - virtual environments
+- conda environments
+- Miniconda installation files
 - credentials
 - server account information
 
