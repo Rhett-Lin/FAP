@@ -486,15 +486,28 @@ Do not change trainer logic, model logic, loss functions, adversarial attack log
 - Do not silently overwrite previous results.
 - If code must be changed, explain why the change is necessary for reproduction.
 
+
 ## Experiment Rules
 
-Before launching any experiment:
+Before launching any experiment, always inspect GPU usage first:
 
 ```bash
 nvidia-smi
 ```
 
-Use `CUDA_VISIBLE_DEVICES` to select a GPU.
+Choose an idle or lightly used GPU according to the current `nvidia-smi` output.
+
+Do not assume GPU `0` is available.
+
+Do not start an experiment on a busy GPU unless explicitly approved by the user.
+
+Use `CUDA_VISIBLE_DEVICES=<GPU_ID>` to select the chosen physical GPU.
+
+For example, if GPU 2 is idle, use:
+
+```bash
+CUDA_VISIBLE_DEVICES=2 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
+```
 
 Use `tmux` for long-running experiments.
 
@@ -517,8 +530,14 @@ export XDG_CACHE_HOME=/work1/zixuan/cache
 
 conda activate /work1/zixuan/envs/conda_envs/fap
 
-CUDA_VISIBLE_DEVICES=0 bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
+nvidia-smi
+
+CUDA_VISIBLE_DEVICES=<GPU_ID> bash scripts/Adv/fap/few_shot_zixuan.sh caltech101 16 0
 ```
+
+Replace `<GPU_ID>` with the idle GPU selected from `nvidia-smi`.
+
+Do not leave `<GPU_ID>` unchanged when actually running the command.
 
 ## Git Rules
 
