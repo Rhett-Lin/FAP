@@ -1,0 +1,15 @@
+启动训练:
+tmux new -s cifar10_v2t_order -d 'cd /work1/zixuan/projects/FAP && bash experiments/robust_tac/scripts/run_cifar10_v2t_v2t2v_gpu9.sh 2>&1 | tee outputs/robust_tac/logs/cifar10_v2t_order_$(date +%Y%m%d_%H%M%S).log'
+
+查看:
+tmux attach -t cifar10_v2t_order
+
+退出 tmux 但不停止任务:
+Ctrl-b 然后 d
+
+查看是否还在跑:
+tmux ls
+
+结束后手动汇总:
+cd /work1/zixuan/projects/FAP
+/work1/zixuan/envs/conda_envs/fap/bin/python experiments/robust_tac/scripts/summarize_cifar10_v2t_order.py

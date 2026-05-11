@@ -16,7 +16,7 @@ def _design_details(mode, prompt_depth=0, n_ctx=0):
         trainer = "CoOp"
         vision_depth = 0
         vision_ctx = 0
-    elif mode == "vprompt":
+    elif mode in {"vprompt", "dualprompt"}:
         trainer = "VPT"
         vision_depth = prompt_depth
         vision_ctx = n_ctx
@@ -53,7 +53,7 @@ def load_clip_to_device(model_name, device, mode="static", prompt_depth=0, n_ctx
     model.eval()
     for param in model.parameters():
         param.requires_grad_(False)
-    if mode == "vprompt":
+    if mode in {"vprompt", "dualprompt"}:
         for name, param in model.visual.named_parameters():
             if "VPT" in name:
                 param.requires_grad_(True)

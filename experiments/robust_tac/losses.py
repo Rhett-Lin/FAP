@@ -28,6 +28,12 @@ def tac_clean_loss(q_text, p_clean, balance_weight=5.0):
     return loss_consist - balance_weight * loss_balance, loss_consist, loss_balance
 
 
+def tac_fixed_teacher_loss(q_teacher, p_clean, balance_weight=5.0):
+    loss_consist = consistency_loss(q_teacher.detach(), p_clean)
+    loss_balance = entropy(p_clean)
+    return loss_consist - balance_weight * loss_balance, loss_consist, loss_balance
+
+
 def per_sample_eg_kl_text(q_text, p_adv):
     return per_sample_kl_target_to_prediction(q_text, p_adv)
 

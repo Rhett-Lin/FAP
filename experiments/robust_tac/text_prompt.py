@@ -6,7 +6,7 @@ from clip import clip
 
 
 class TextPromptEncoder(nn.Module):
-    def __init__(self, clip_model, nouns, n_ctx=2):
+    def __init__(self, clip_model, nouns, n_ctx=2, freeze_clip=True):
         super().__init__()
         if n_ctx <= 0:
             raise ValueError("n_ctx must be positive for text prompt")
@@ -24,8 +24,9 @@ class TextPromptEncoder(nn.Module):
         prompts = [f"{' '.join(['X'] * n_ctx)} {noun.replace('_', ' ')}." for noun in self.nouns]
         self.register_buffer("tokenized_prompts", clip.tokenize(prompts), persistent=False)
 
-        for param in self.clip_model.parameters():
-            param.requires_grad_(False)
+        if freeze_clip:
+            for param in self.clip_model.parameters():
+                param.requires_grad_(False)
 
     @property
     def dtype(self):

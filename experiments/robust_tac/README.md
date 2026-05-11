@@ -14,6 +14,8 @@ not modify `train.py`, `trainers/fap.py`, `attack/pgd.py`, or
 - Backbone: frozen CLIP ViT-B/32.
 - Static trainable modules: image and text cluster heads only.
 - VPrompt trainable modules: shallow visual prompt tokens and cluster heads only.
+- DualPrompt trainable modules: shallow visual prompt tokens, learnable text
+  context tokens, and cluster heads only.
 - Training labels: not used.
 - Evaluation labels: used only for ACC, NMI, ARI.
 - Attack: label-free PGD in raw pixel space, maximizing
@@ -39,7 +41,7 @@ guidance method.
 ```bash
 /work1/zixuan/envs/conda_envs/fap/bin/python experiments/robust_tac/train_robust_tac.py \
   --dataset Caltech101 \
-  --root /work1/zixuan/data/fap \
+  --root /work1/zixuan/data \
   --mode static \
   --epochs 1 \
   --batch-size 32 \
@@ -106,6 +108,41 @@ from the TAC guidance npz, encodes prompts of the form `X X {noun}.`, builds a
 prompted noun anchor bank each batch, and retrieves text counterparts from clean
 image features via softmax retrieval. Add `--eg-symmetric --eta-sym 0.1` to let
 the text prompt receive the reverse KL signal from the adversarial branch.
+
+## DualPrompt
+
+`--mode dualprompt` combines the VPrompt image path and TPrompt text path. Clean
+and adversarial image features are encoded with the trainable visual prompt. The
+text counterpart is dynamically retrieved from prompted noun anchors using the
+prompted clean image feature:
+
+```text
+softmax(v_clean @ T(P_t).T / tau_retrieval) @ T(P_t)
+```
+
+Use it with TAC text guidance:
+
+```bash
+CUDA_VISIBLE_DEVICES=9 /work1/zixuan/envs/conda_envs/fap/bin/python experiments/robust_tac/train_robust_tac.py \
+  --dataset CIFAR10 \
+  --root /work1/zixuan/data/fap \
+  --mode dualprompt \
+  --epochs 1 \
+  --batch-size 32 \
+  --max-train-samples 512 \
+  --max-test-samples 512 \
+  --train-steps 1 \
+  --eval-steps 2 \
+  --lambda-ca 1.0 \
+  --lambda-eg 0.5 \
+  --eg-type text_assignment \
+  --prompt-depth 1 \
+  --n-ctx 2 \
+  --num-clusters auto \
+  --guidance-type tac_text \
+  --guidance-path experiments/robust_tac/guidance_cache/cifar10_tac_guidance_full.npz \
+  --output outputs/robust_tac/smoke_dualprompt_ca_eg
+```
 
 ## EG And FAP Weight
 
